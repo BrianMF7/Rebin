@@ -5,11 +5,13 @@ ReBin Pro is an AI-powered waste sorting application that uses computer vision, 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Node.js 18+ (for local development)
 - Python 3.11+ (for local development)
 
 ### 1. Clone and Setup
+
 ```bash
 git clone <your-repo>
 cd Rebin
@@ -17,7 +19,9 @@ cp env.example .env
 ```
 
 ### 2. Configure Environment
+
 Edit `.env` with your API keys:
+
 ```bash
 # Required: Get these from your service providers
 SUPABASE_URL=your_supabase_url_here
@@ -28,6 +32,7 @@ ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 ```
 
 ### 3. Setup Supabase Database
+
 Run these SQL commands in your Supabase SQL editor:
 
 ```sql
@@ -54,30 +59,48 @@ CREATE TABLE policies (
 );
 
 -- Insert sample policies
-INSERT INTO policies (zip, rules_json) VALUES 
+INSERT INTO policies (zip, rules_json) VALUES
 ('10001', '{"recycling": ["plastic #1-2", "paper"], "compost": ["food", "yard"], "trash": ["styrofoam"]}'),
 ('94103', '{"recycling": ["glass", "paper", "metal"], "compost": ["food", "soiled paper"], "trash": ["film plastic"]}');
 ```
 
-### 4. Run with Docker
+### 4. Run the Application
+
+#### Option A: Development Mode (Recommended)
+
 ```bash
-docker-compose up --build
+# Install dependencies and setup environment
+npm run setup
+
+# Start all services in development mode
+npm run dev
+```
+
+#### Option B: Docker Mode
+
+```bash
+# Start with Docker Compose
+npm run start
 ```
 
 ### 5. Access the App
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:8000
 - API Docs: http://localhost:8000/docs
+- CV Mock Service: http://localhost:9000
 
 ## 🏗️ Architecture
 
 ### Frontend (React + TypeScript)
+
 - **Location**: `frontend/`
 - **Tech**: React 18, TypeScript, TailwindCSS, React Query
 - **Features**: Camera upload, result display, stats dashboard
 - **Components**: CameraUpload, ResultCard, StatsPanel
 
 ### Backend (FastAPI)
+
 - **Location**: `backend/`
 - **Tech**: FastAPI, Pydantic, Supabase, OpenRouter
 - **Endpoints**:
@@ -86,11 +109,13 @@ docker-compose up --build
   - `POST /event` - Log sorting events
 
 ### Edge Layer (Cloudflare Worker)
+
 - **Location**: `cloudflare-worker/`
 - **Features**: Image resizing, ZIP-based policy lookup, request forwarding
 - **Deploy**: `cd cloudflare-worker && npm run deploy`
 
 ### Mock CV Service
+
 - **Location**: `services/cv-mock/`
 - **Purpose**: Demo computer vision endpoint
 - **Replace**: Point `GRADIENT_INFER_URL` to your actual YOLOv8n endpoint
@@ -98,6 +123,7 @@ docker-compose up --build
 ## 🔧 Development
 
 ### Local Development (without Docker)
+
 ```bash
 # Backend
 cd backend
@@ -116,6 +142,7 @@ uvicorn app:app --reload --port 9000
 ```
 
 ### Environment Variables
+
 - Copy `env.example` to `.env` in project root
 - Copy `frontend/env.example` to `frontend/.env`
 - Copy `backend/env.example` to `backend/.env`
@@ -123,25 +150,31 @@ uvicorn app:app --reload --port 9000
 ## 📦 API Integration
 
 ### Computer Vision
+
 Replace the mock service with your DigitalOcean Gradient YOLOv8n endpoint:
+
 ```bash
 export GRADIENT_INFER_URL=https://your-gradient-endpoint.com/predict
 ```
 
 ### Reasoning
+
 Uses OpenRouter for AI reasoning. Supports any model via OpenRouter API.
 
 ### Voice Output
+
 ElevenLabs integration for text-to-speech feedback.
 
 ## 🚀 Deployment
 
 ### Production Docker
+
 ```bash
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Cloudflare Worker
+
 ```bash
 cd cloudflare-worker
 npm install
@@ -149,6 +182,7 @@ npm run deploy
 ```
 
 ### Environment Setup
+
 1. Create Supabase project
 2. Get OpenRouter API key
 3. Get ElevenLabs API key
@@ -158,12 +192,14 @@ npm run deploy
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 cd backend
 python -m pytest tests/
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 npm test

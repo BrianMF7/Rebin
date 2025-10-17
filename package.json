@@ -1,0 +1,57 @@
+{
+  "name": "rebin-pro",
+  "version": "1.0.0",
+  "description": "AI-Powered Waste Sorting Application",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "cloudflare-worker"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:cv-mock\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && source venv/bin/activate && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:cv-mock": "cd services/cv-mock && source venv/bin/activate && python -m uvicorn app:app --reload --host 0.0.0.0 --port 9000",
+    "build": "npm run build:frontend && npm run build:worker",
+    "build:frontend": "cd frontend && npm run build",
+    "build:worker": "cd cloudflare-worker && npm run build",
+    "start": "docker-compose up --build",
+    "start:prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "stop": "docker-compose down",
+    "clean": "docker-compose down -v --rmi all",
+    "install:all": "npm install && cd frontend && npm install && cd ../cloudflare-worker && npm install",
+    "lint": "npm run lint:frontend && npm run lint:worker",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:worker": "cd cloudflare-worker && npm run lint",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && python -m pytest tests/",
+    "setup": "npm run install:all && npm run setup:env",
+    "setup:env": "cp env.example .env && cp frontend/env.example frontend/.env && cp backend/env.example backend/.env"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "overrides": {
+    "axios": "^1.12.2",
+    "@supabase/supabase-js": "^2.75.1",
+    "eslint": "^9.37.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/rebin-pro.git"
+  },
+  "keywords": [
+    "ai",
+    "waste-sorting",
+    "recycling",
+    "computer-vision",
+    "sustainability"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
