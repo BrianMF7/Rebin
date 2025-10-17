@@ -22,7 +22,7 @@ app = FastAPI(title="YOLOv8n Local Service")
 try:
     # wrap the load in a safe_globals context to be extra sure
     with safe_globals([DetectionModel, container.Sequential]):
-        model = YOLO("yolov8n.pt")  # <-- DO NOT call torch.load yourself
+        model = YOLO("yolov8s.pt")  # <-- DO NOT call torch.load yourself
     logger.info("YOLOv8n model loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load YOLOv8n model: {e}")
@@ -37,8 +37,8 @@ async def predict(file: UploadFile = File(...)):
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
         image_array = np.array(image)
 
-        results = model(image_array, conf=0.5)
-
+        results = model(image_array, conf=0.2)
+        print(model.names)
         detections = []
         for r in results:
             if r.boxes is not None:
