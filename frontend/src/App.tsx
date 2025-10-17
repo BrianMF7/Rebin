@@ -3,6 +3,9 @@ import { CameraUpload } from './components/CameraUpload'
 import { StatsPanel } from './components/StatsPanel'
 import { Header } from './components/Header'
 
+
+
+
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
