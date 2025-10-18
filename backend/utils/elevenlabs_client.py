@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from utils.http_client import http_client
-from utils.settings import settings
+from utils.settings import ELEVENLABS_API_KEY
 
 
 # Voice personality configurations with avatar metadata
@@ -77,7 +77,7 @@ async def get_tts_audio_data(
     Returns:
         Audio data as bytes (MP3 format) or None if failed
     """
-    if not settings.ELEVENLABS_API_KEY:
+    if not ELEVENLABS_API_KEY:
         logger.warning("ElevenLabs API key not configured")
         return None
 
@@ -86,7 +86,7 @@ async def get_tts_audio_data(
     
     try:
         headers = {
-            "xi-api-key": settings.ELEVENLABS_API_KEY,
+            "xi-api-key": ELEVENLABS_API_KEY,
             "Content-Type": "application/json",
         }
         body = {
