@@ -23,22 +23,53 @@ try:
     # wrap the load in a safe_globals context to be extra sure
     with safe_globals([DetectionModel, container.Sequential]):
         model = YOLO("yolov8s.pt")  # <-- DO NOT call torch.load yourself
-    logger.info("YOLOv8n model loaded successfully")
+    logger.info("YOLOv8s model loaded successfully")
+except FileNotFoundError:
+    logger.error("YOLOv8s model file not found. Please ensure yolov8s.pt is in the current directory")
+    model = None
+except torch.serialization.pickle.UnpicklingError as e:
+    logger.error(f"Model file corrupted or incompatible: {e}")
+    model = None
 except Exception as e:
-    logger.error(f"Failed to load YOLOv8n model: {e}")
+    logger.error(f"Failed to load YOLOv8s model: {e}")
     model = None
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     if model is None:
-        raise HTTPException(status_code=500, detail="YOLOv8n model not loaded")
+        raise HTTPException(status_code=503, detail="YOLOv8s model not loaded - service unavailable")
+    
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Check file size (limit to 10MB)
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    
     try:
         image_data = await file.read()
-        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        
+        if len(image_data) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="Image file too large (max 10MB)")
+        
+        if len(image_data) == 0:
+            raise HTTPException(status_code=400, detail="Empty image file")
+        
+        # Try to open and process image
+        try:
+            image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid image format: {str(e)}")
+        
         image_array = np.array(image)
+        
+        # Validate image dimensions
+        if image_array.shape[0] == 0 or image_array.shape[1] == 0:
+            raise HTTPException(status_code=400, detail="Image has invalid dimensions")
 
         results = model(image_array, conf=0.2)
-        print(model.names)
+        logger.info(f"Processed image: {image_array.shape}, found {len(results)} result(s)")
+        
         detections = []
         for r in results:
             if r.boxes is not None:
@@ -48,10 +79,14 @@ async def predict(file: UploadFile = File(...)):
                     conf = float(box.conf[0])
                     detections.append({"label": label, "confidence": conf})
 
+        logger.info(f"Detected {len(detections)} objects: {[d['label'] for d in detections]}")
         return {"objects": detections}
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Prediction failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        logger.error(f"Prediction failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal prediction error")
 
 @app.get("/health")
 async def health_check():
