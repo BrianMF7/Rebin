@@ -4,6 +4,7 @@ import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
 import { StatCard } from "../ui/statCard"
 import { Icons } from "../ui/icons"
+import { Link } from "react-router-dom"
 
 export function HeroSection() {
   const stats = [
@@ -32,10 +33,12 @@ export function HeroSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 group">
-              Start Sorting
-              <Icons.arrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            <Link to="/sorting">
+              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 group">
+                Start Sorting
+                <Icons.arrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
             <Button size="lg" variant="outline" className="border-border text-foreground hover:bg-card bg-transparent">
               Learn More
             </Button>
