@@ -1,15 +1,17 @@
+import React from 'react';
+import { cn } from '../../lib/utils';
+
 interface MissionCardProps {
-    title: string
-    description: string
-    color?: string
-  }
-  
-  export function MissionCard({ title, description, color = "text-secondary" }: MissionCardProps) {
-    return (
-      <div className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border border-border">
-        <div className={`text-3xl font-bold ${color} mb-2`}>{title}</div>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-    )
-  }
-  
+  title: string;
+  description: string;
+  className?: string;
+}
+
+export function MissionCard({ title, description, className }: MissionCardProps) {
+  return (
+    <div className={cn('p-6 rounded-lg bg-card text-card-foreground shadow-sm', className)}>
+      <h3 className="text-xl font-bold mb-3">{title}</h3>
+      <p className="text-muted-foreground">{description}</p>
+    </div>
+  );
+}

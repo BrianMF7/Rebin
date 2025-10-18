@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "../lib/api";
-import { ItemDecision, ChatbotResponse, VoiceOption } from "../types";
+import {
+  ItemDecision,
+  ChatbotResponse,
+  VoicePersonality,
+  AvatarConfig,
+} from "../types";
 import { Icons } from "./ui/icons";
+import { AvatarDisplay, AvatarSelector } from "./AvatarDisplay";
+import { preloadAvatarImages, validateAvatarConfig } from "../lib/security";
 
 interface ChatbotInterfaceProps {
   decisions: ItemDecision[];
@@ -21,21 +28,54 @@ export function ChatbotInterface({
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(
     null
   );
-  const [availableVoices, setAvailableVoices] = useState<VoiceOption[]>([]);
+  const [availableVoices, setAvailableVoices] = useState<VoicePersonality[]>(
+    []
+  );
+  const [availableAvatars, setAvailableAvatars] = useState<AvatarConfig[]>([]);
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarConfig | null>(
+    null
+  );
   const [showFallback, setShowFallback] = useState(false);
 
-  // Fetch available voices on component mount
+  // Fetch available voices and avatars on component mount
   useEffect(() => {
-    const fetchVoices = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiClient.getAvailableVoices();
-        setAvailableVoices(response.voices);
+        // Fetch voices
+        const voicesResponse = await apiClient.getAvailableVoices();
+        setAvailableVoices(voicesResponse.voices);
+
+        // Fetch avatars
+        const avatars = await apiClient.getAvatarConfigs();
+        setAvailableAvatars(avatars);
+
+        // Set default avatar based on voice personality
+        const defaultAvatar = avatars.find(
+          (avatar) => avatar.voice_personality === voicePersonality
+        );
+        if (defaultAvatar) {
+          setSelectedAvatar(defaultAvatar);
+        }
+
+        // Preload avatar images for better performance
+        preloadAvatarImages(avatars).catch((error) => {
+          console.warn("Failed to preload some avatar images:", error);
+        });
       } catch (error) {
-        console.error("Failed to fetch voices:", error);
+        console.error("Failed to fetch voices and avatars:", error);
+        // Set fallback avatars
+        const fallbackAvatars = apiClient.getFallbackAvatarConfigs();
+        setAvailableAvatars(fallbackAvatars);
+        const defaultAvatar = fallbackAvatars.find(
+          (avatar) => avatar.voice_personality === voicePersonality
+        );
+        if (defaultAvatar) {
+          setSelectedAvatar(defaultAvatar);
+        }
       }
     };
-    fetchVoices();
-  }, []);
+    fetchData();
+  }, [voicePersonality]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -138,26 +178,63 @@ export function ChatbotInterface({
   };
 
   const getVoiceDisplayName = (voiceId: string) => {
-    const voice = availableVoices.find((v) => v.id === voiceId);
-    return voice?.name || voiceId;
+    const voice = availableVoices.find((v) => v.personality_id === voiceId);
+    return voice?.avatar?.name || voiceId;
   };
 
   const getVoiceDescription = (voiceId: string) => {
-    const voice = availableVoices.find((v) => v.id === voiceId);
-    return voice?.description || "";
+    const voice = availableVoices.find((v) => v.personality_id === voiceId);
+    return voice?.avatar?.description || "";
   };
+
+  // Handle avatar selection
+  const handleAvatarSelect = (avatar: AvatarConfig) => {
+    if (validateAvatarConfig(avatar)) {
+      setSelectedAvatar(avatar);
+      setVoicePersonality(avatar.voice_personality as typeof voicePersonality);
+    } else {
+      console.error("Invalid avatar configuration:", avatar);
+    }
+  };
+
+  // Update selected avatar when voice personality changes
+  useEffect(() => {
+    const matchingAvatar = availableAvatars.find(
+      (avatar) => avatar.voice_personality === voicePersonality
+    );
+    if (
+      matchingAvatar &&
+      (!selectedAvatar || selectedAvatar.id !== matchingAvatar.id)
+    ) {
+      setSelectedAvatar(matchingAvatar);
+    }
+  }, [voicePersonality, availableAvatars, selectedAvatar]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            🎤 Voice Assistant
-          </h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-xl font-semibold text-gray-900">
+              🎤 Voice Assistant
+            </h2>
+            {selectedAvatar && (
+              <div className="flex items-center space-x-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: selectedAvatar.color_theme }}
+                />
+                <span className="text-sm text-gray-600">
+                  {selectedAvatar.name}
+                </span>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Close voice assistant"
           >
             <Icons.x className="w-6 h-6" />
           </button>
@@ -165,6 +242,37 @@ export function ChatbotInterface({
 
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Avatar Display */}
+          {selectedAvatar && (
+            <div className="flex justify-center">
+              <AvatarDisplay
+                avatar={selectedAvatar}
+                isSpeaking={isPlaying}
+                isListening={speakMutation.isPending}
+                size="lg"
+                showName={true}
+                showTraits={true}
+                className="mb-4"
+              />
+            </div>
+          )}
+
+          {/* Avatar Selection */}
+          {availableAvatars.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Choose Your Guide
+              </label>
+              <AvatarSelector
+                avatars={availableAvatars}
+                selectedAvatar={selectedAvatar || availableAvatars[0]}
+                onAvatarSelect={handleAvatarSelect}
+                size="md"
+                className="mb-4"
+              />
+            </div>
+          )}
+
           {/* Voice Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
