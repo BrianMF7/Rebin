@@ -4,7 +4,7 @@ from loguru import logger
 from supabase import create_client
 
 from schemas import EventCreateRequest
-from utils.settings import settings
+from utils.settings import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 _supabase = None
 
@@ -15,9 +15,9 @@ def supabase():
     """
     global _supabase
     if _supabase is None:
-        if not settings.SUPABASE_URL or not settings.SUPABASE_SERVICE_ROLE_KEY:
+        if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
             raise RuntimeError("Supabase configuration missing")
-        _supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+        _supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     return _supabase
 
 

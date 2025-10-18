@@ -5,12 +5,13 @@ export function MissionSection() {
     {
       title: "Zero Waste",
       description: "Working towards a future where nothing goes to landfills",
-      color: "text-secondary",
+      color: "text-amber-600",
     },
     {
       title: "100% Green",
       description: "Powered by renewable energy and sustainable practices",
       color: "text-primary",
+      size: "text-2xl",
     },
   ]
 
@@ -27,7 +28,13 @@ export function MissionSection() {
           </p>
           <div className="grid sm:grid-cols-2 gap-6 pt-8">
             {goals.map((goal, index) => (
-              <MissionCard key={index} title={goal.title} description={goal.description} color={goal.color} />
+              <MissionCard 
+                key={index} 
+                title={goal.title} 
+                description={goal.description} 
+                color={goal.color} 
+                size={goal.size}
+              />
             ))}
           </div>
         </div>

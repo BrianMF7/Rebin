@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "../ui/button"
 import { NavLink } from "../ui/nav-link"
 import { Icons } from "../ui/icons"
