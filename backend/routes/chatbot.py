@@ -6,8 +6,22 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer
 from loguru import logger
 
-from schemas import ChatbotRequest, ChatbotResponse, ItemDecision
-from utils.elevenlabs_client import get_tts_base64
+from schemas import (
+    ChatbotRequest, 
+    ChatbotResponse, 
+    ItemDecision,
+    VoicePersonalityResponse,
+    AvatarResponse,
+    VoicePersonality,
+    AvatarConfiguration,
+    AvatarInfo,
+    VoiceSettings
+)
+from utils.elevenlabs_client import (
+    get_tts_base64,
+    get_voice_personalities,
+    get_avatar_configurations
+)
 
 security = HTTPBearer(auto_error=False)
 
@@ -186,27 +200,56 @@ async def speak_decisions(request: ChatbotRequest):
         raise HTTPException(status_code=500, detail="Failed to generate speech")
 
 
-@router.get("/voices")
+@router.get("/voices", response_model=VoicePersonalityResponse)
 async def get_available_voices():
     """
-    Get available voice personalities and their descriptions.
+    Get available voice personalities with their configurations and avatar information.
+    
+    Returns:
+        VoicePersonalityResponse: Complete voice personality configurations including avatar data
     """
-    return {
-        "voices": [
-            {
-                "id": "friendly",
-                "name": "Friendly Guide",
-                "description": "Warm, encouraging tone perfect for everyday use"
-            },
-            {
-                "id": "enthusiastic", 
-                "name": "Eco Enthusiast",
-                "description": "Excited and energetic about environmental impact"
-            },
-            {
-                "id": "educational",
-                "name": "Educational",
-                "description": "Clear, informative delivery for learning"
-            }
-        ]
-    }
+    try:
+        voice_personalities = get_voice_personalities()
+        voices = []
+        
+        for personality_id, config in voice_personalities.items():
+            voice_personality = VoicePersonality(
+                personality_id=personality_id,
+                voice_id=config["voice_id"],
+                voice_settings=VoiceSettings(**config["voice_settings"]),
+                avatar=AvatarInfo(**config["avatar"])
+            )
+            voices.append(voice_personality)
+        
+        return VoicePersonalityResponse(voices=voices)
+        
+    except Exception as exc:
+        logger.error(f"Error retrieving voice personalities: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve voice personalities")
+
+
+@router.get("/avatars", response_model=AvatarResponse)
+async def get_avatar_configurations():
+    """
+    Get avatar configurations for all available voice personalities.
+    
+    Returns:
+        AvatarResponse: List of avatar configurations with voice personality mappings
+    """
+    try:
+        avatar_configs = get_avatar_configurations()
+        avatars = []
+        
+        for config in avatar_configs:
+            avatar_config = AvatarConfiguration(
+                personality_id=config["personality_id"],
+                voice_id=config["voice_id"],
+                avatar=AvatarInfo(**config["avatar"])
+            )
+            avatars.append(avatar_config)
+        
+        return AvatarResponse(avatars=avatars)
+        
+    except Exception as exc:
+        logger.error(f"Error retrieving avatar configurations: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve avatar configurations")

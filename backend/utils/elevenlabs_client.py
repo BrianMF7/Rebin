@@ -1,6 +1,6 @@
 import base64
 import tempfile
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -10,33 +10,54 @@ from utils.http_client import http_client
 from utils.settings import settings
 
 
-# Voice personality configurations
+# Voice personality configurations with avatar metadata
 VOICE_PERSONALITIES = {
     "friendly": {
-        "voice_id": "pNInz6obpgDQGcFmaJgB",  # Default friendly voice
+        "voice_id": "s3TPKV1kjDlVtZbl4Ksh",  # Default friendly voice
         "voice_settings": {
             "stability": 0.6,
             "similarity_boost": 0.7,
             "style": 0.3,
             "use_speaker_boost": True
+        },
+        "avatar": {
+            "name": "Green Gary",
+            "gender": "male",
+            "description": "A friendly, approachable guide who makes recycling feel easy and natural",
+            "personality_traits": ["encouraging", "patient", "warm", "supportive"],
+            "color_theme": "#4CAF50"  # Green theme
         }
     },
     "enthusiastic": {
-        "voice_id": "EXAVITQu4vr4xnSDxMaL",  # More energetic voice
+        "voice_id": "y3H6zY6KvCH2pEuQjmv8",  # More energetic voice
         "voice_settings": {
             "stability": 0.4,
             "similarity_boost": 0.8,
             "style": 0.6,
             "use_speaker_boost": True
+        },
+        "avatar": {
+            "name": "Eco Emma",
+            "gender": "female",
+            "description": "An energetic environmental enthusiast who gets excited about sustainable practices",
+            "personality_traits": ["energetic", "passionate", "motivating", "inspiring"],
+            "color_theme": "#FF9800"  # Orange theme
         }
     },
     "educational": {
-        "voice_id": "VR6AewLTigWG4xSOukaG",  # Clear, professional voice
+        "voice_id": "onwK4e9ZLuTAKqWW03F9",  # Clear, professional voice
         "voice_settings": {
             "stability": 0.8,
             "similarity_boost": 0.6,
             "style": 0.2,
             "use_speaker_boost": True
+        },
+        "avatar": {
+            "name": "Professor Pete",
+            "gender": "male",
+            "description": "A knowledgeable educator who provides clear, informative guidance on waste management",
+            "personality_traits": ["knowledgeable", "clear", "professional", "informative"],
+            "color_theme": "#2196F3"  # Blue theme
         }
     }
 }
@@ -156,6 +177,67 @@ async def save_tts_to_file(
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to save audio to file: {exc}")
         return None
+
+
+def get_voice_personalities() -> Dict[str, Any]:
+    """
+    Get all available voice personalities with their configurations.
+    
+    Returns:
+        Dictionary containing all voice personality configurations
+    """
+    return VOICE_PERSONALITIES
+
+
+def get_voice_personality(personality_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Get a specific voice personality configuration by ID.
+    
+    Args:
+        personality_id: The personality ID ("friendly", "enthusiastic", "educational")
+    
+    Returns:
+        Voice personality configuration or None if not found
+    """
+    return VOICE_PERSONALITIES.get(personality_id)
+
+
+def get_avatar_configurations() -> List[Dict[str, Any]]:
+    """
+    Get all avatar configurations for available voice personalities.
+    
+    Returns:
+        List of avatar configurations with voice personality mappings
+    """
+    avatars = []
+    for personality_id, config in VOICE_PERSONALITIES.items():
+        avatar_config = {
+            "personality_id": personality_id,
+            "voice_id": config["voice_id"],
+            "avatar": config["avatar"]
+        }
+        avatars.append(avatar_config)
+    return avatars
+
+
+def get_avatar_configuration(personality_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Get avatar configuration for a specific voice personality.
+    
+    Args:
+        personality_id: The personality ID ("friendly", "enthusiastic", "educational")
+    
+    Returns:
+        Avatar configuration or None if not found
+    """
+    config = VOICE_PERSONALITIES.get(personality_id)
+    if config:
+        return {
+            "personality_id": personality_id,
+            "voice_id": config["voice_id"],
+            "avatar": config["avatar"]
+        }
+    return None
 
 
 # Legacy function for backward compatibility
