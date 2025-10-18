@@ -8,8 +8,8 @@ import { Icons } from "../ui/icons"
 export function HeroSection() {
   const stats = [
     { value: "98%", label: "Accuracy" },
-    { value: "50K+", label: "Users" },
-    { value: "2M+", label: "Items Sorted" },
+    { value: "Expected 100+", label: "Users" },
+    { value: "Many", label: "Items Sorted" },
   ]
 
   return (
@@ -27,7 +27,7 @@ export function HeroSection() {
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty leading-relaxed">
-            AI-powered waste classification that helps you make the right choice every time. Join thousands making a
+            AI-powered waste classification that helps you make the right choice every time. Join now in making a
             real impact on our planet.
           </p>
 

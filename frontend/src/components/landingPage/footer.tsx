@@ -50,23 +50,23 @@ export function Footer() {
             <h3 className="font-semibold text-foreground mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a href="https://portal.311.nyc.gov/article/?kanumber=KA-02013" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Recycling Guide
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a href="https://www.epa.gov/recycle/composting-home" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Composting Tips
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Blog
+                <a href="https://cleanriver.com/resource/blog-what-can-i-do-to-help-recycling/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  How to recycle
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  FAQ
+                <a href="https://www.epa.gov/recycle/recycling-basics-and-benefits" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Benefits of recycling
                 </a>
               </li>
             </ul>
@@ -82,7 +82,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <Icons.phone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">+1 (555) 420-6967</span>
+                <span className="text-sm text-muted-foreground">+1 (910) 420-6967</span>
               </li>
               <li className="flex items-start gap-2">
                 <Icons.mapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
@@ -95,16 +95,10 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">Â© {new Date().getFullYear()} ReBin. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} ReBin. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                Cookie Policy
+              <a className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Join the community and lets make a difference together
               </a>
             </div>
           </div>

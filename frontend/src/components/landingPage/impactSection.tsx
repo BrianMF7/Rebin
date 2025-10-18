@@ -6,19 +6,19 @@ export function ImpactSection() {
   const impacts = [
     {
       icon: Icons.leaf,
-      value: "2.5M kg",
+      value: "2.5M kg+",
       label: "Waste Diverted",
       description: "From landfills to proper recycling",
     },
     {
       icon: Icons.droplets,
-      value: "500K L",
+      value: "500K L+",
       label: "Water Saved",
       description: "Through proper recycling practices",
     },
     {
       icon: Icons.wind,
-      value: "1.2M kg",
+      value: "1.2M kg+",
       label: "CO₂ Reduced",
       description: "Carbon emissions prevented",
     },
@@ -36,7 +36,7 @@ export function ImpactSection() {
         <SectionHeader
           title="Real "
           highlight=" Impact"
-          description="Together, we're making a measurable difference for our planet"
+          description="Together, we plan to make a goal with these measurable differences for our planet"
         />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
