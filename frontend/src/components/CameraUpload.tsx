@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "../lib/api";
 import { ResultCard } from "./ResultCard";
+import { ChatbotInterface } from "./ChatbotInterface";
 import { ItemDecision } from "../types";
 import { Icons } from "./ui/icons";
 
@@ -9,6 +10,7 @@ export function CameraUpload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [zipCode, setZipCode] = useState("");
   const [results, setResults] = useState<ItemDecision[]>([]);
+  const [showGlobalChatbot, setShowGlobalChatbot] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Webcam state
@@ -389,9 +391,21 @@ export function CameraUpload() {
 
       {results.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Sorting Results
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Sorting Results
+            </h2>
+            {results.length > 1 && (
+              <button
+                onClick={() => setShowGlobalChatbot(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white rounded-md transition-all duration-200 transform hover:scale-105"
+                aria-label="Listen to all explanations"
+              >
+                <Icons.phone className="w-4 h-4" />
+                <span className="text-sm font-medium">🎤 Listen to All</span>
+              </button>
+            )}
+          </div>
           {results.map((decision, index) => (
             <ResultCard key={index} decision={decision} />
           ))}
@@ -405,6 +419,14 @@ export function CameraUpload() {
             {inferMutation.error?.message || explainMutation.error?.message}
           </p>
         </div>
+      )}
+
+      {/* Global Chatbot Interface Modal */}
+      {showGlobalChatbot && (
+        <ChatbotInterface
+          decisions={results}
+          onClose={() => setShowGlobalChatbot(false)}
+        />
       )}
     </div>
   );
