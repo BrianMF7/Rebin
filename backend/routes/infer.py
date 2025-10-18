@@ -5,7 +5,7 @@ from loguru import logger
 
 from schemas import InferResponse, ItemDetection
 from utils.http_client import http_client
-from utils.settings import settings
+from utils.settings import YOLO_INFER_URL
 
 router = APIRouter()
 
@@ -16,18 +16,18 @@ async def infer(
     zip: Optional[str] = Form(default=None),
 ) -> InferResponse:
     """
-    Calls the CV endpoint (YOLOv8n on Gradient or mock) and returns detected items.
+    Calls the local YOLOv8 service and returns detected items.
     """
     try:
         files = {"file": (file.filename, await file.read(), file.content_type or "image/jpeg")}
-        target = settings.GRADIENT_INFER_URL
-        logger.info(f"Calling CV endpoint: {target}")
+        target = YOLO_INFER_URL
+        logger.info(f"Calling YOLOv8 service: {target}")
         resp = await http_client.post(target, files=files, timeout=30.0)
         if resp.status_code != 200:
-            logger.error(f"CV call failed: {resp.status_code} {resp.text}")
+            logger.error(f"YOLOv8 call failed: {resp.status_code} {resp.text}")
             raise HTTPException(
                 status_code=502,
-                detail={"error": "cv_error", "message": "Computer vision service failed"},
+                detail={"error": "cv_error", "message": "YOLOv8 service failed"},
             )
 
         data = resp.json()

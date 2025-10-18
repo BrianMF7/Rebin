@@ -4,20 +4,20 @@ from fastapi import HTTPException
 from loguru import logger
 
 from utils.http_client import http_client
-from utils.settings import settings
+from utils.settings import ELEVENLABS_API_KEY
 
 
 async def get_tts_url(text: str) -> Optional[str]:
     """
     Convert text to speech using ElevenLabs and return the MP3 URL.
     """
-    if not settings.ELEVENLABS_API_KEY:
+    if not ELEVENLABS_API_KEY:
         logger.warning("ElevenLabs API key not configured")
         return None
 
     try:
         headers = {
-            "xi-api-key": settings.ELEVENLABS_API_KEY,
+            "xi-api-key": ELEVENLABS_API_KEY,
             "Content-Type": "application/json",
         }
         body = {

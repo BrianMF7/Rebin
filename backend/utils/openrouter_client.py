@@ -6,7 +6,7 @@ from loguru import logger
 
 from schemas import ItemDecision
 from utils.http_client import http_client
-from utils.settings import settings
+from utils.settings import OPENROUTER_API_KEY, OPENROUTER_MODEL
 
 SYSTEM_PROMPT = (
     "You are a zero-shot waste sorting expert. "
@@ -23,11 +23,11 @@ async def get_reasoned_decisions(
     """
     Calls OpenRouter for structured decisions, with optional local policy context.
     """
-    if not settings.OPENROUTER_API_KEY:
+    if not OPENROUTER_API_KEY:
         logger.error("OPENROUTER_API_KEY is empty or missing")
         raise HTTPException(status_code=500, detail={"error": "config", "message": "OPENROUTER_API_KEY missing"})
     
-    logger.info(f"Using OpenRouter API key: {settings.OPENROUTER_API_KEY[:10]}...")
+    logger.info(f"Using OpenRouter API key: {OPENROUTER_API_KEY[:10]}...")
 
     user_context = {
         "zip": zip_code,
@@ -44,13 +44,13 @@ async def get_reasoned_decisions(
     )
 
     headers = {
-        "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "HTTP-Referer": "https://rebin.local",
         "X-Title": "ReBin Pro",
         "Content-Type": "application/json",
     }
     body = {
-        "model": settings.OPENROUTER_MODEL,
+        "model": OPENROUTER_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
