@@ -34,8 +34,8 @@ export function FeaturesSection() {
     <section id="features" className="relative py-20 sm:py-32">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          title="Powerful"
-          highlight="Features"
+          title="Powerful "
+          highlight=" Features"
           description="Everything you need to make informed decisions about waste sorting"
         />
 
