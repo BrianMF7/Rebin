@@ -34,8 +34,8 @@ export function ImpactSection() {
     <section id="impact" className="relative py-20 sm:py-32 bg-card/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          title="Real"
-          highlight="Impact"
+          title="Real "
+          highlight=" Impact"
           description="Together, we're making a measurable difference for our planet"
         />
 
