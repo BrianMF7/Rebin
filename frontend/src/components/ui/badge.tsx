@@ -1,16 +1,27 @@
-import type React from "react"
-import type { IconProps } from "../ui/icons"
+import React from 'react';
+import { cn } from '../../lib/utils';
 
 interface BadgeProps {
-  icon: React.ComponentType<IconProps>
-  text: string
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  children: React.ReactNode;
+  className?: string;
 }
 
-export function Badge({ icon: Icon, text }: BadgeProps) {
+export function Badge({ variant = 'default', children, className }: BadgeProps) {
   return (
-    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-      <Icon className="h-4 w-4 text-primary" />
-      <span className="text-sm font-medium text-primary">{text}</span>
+    <div
+      className={cn(
+        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        {
+          'border-transparent bg-primary text-primary-foreground hover:bg-primary/80': variant === 'default',
+          'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80': variant === 'secondary',
+          'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80': variant === 'destructive',
+          'text-foreground': variant === 'outline',
+        },
+        className
+      )}
+    >
+      {children}
     </div>
-  )
+  );
 }

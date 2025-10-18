@@ -1,7 +1,6 @@
-"use client"
 import React from "react";
-import {Button} from "../ui/button"
-import { NavLink } from "../ui/navLink"
+import { Button } from "../ui/button"
+import { NavLink } from "../ui/nav-link"
 import { Icons } from "../ui/icons"
 import { useState } from "react"
 
@@ -36,8 +35,7 @@ export function Header() {
             ))}
              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
              </nav>
-             {/* Mobile Menu Button *\}
-            {/* Mobile Menu Button */}
+             {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2 text-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
