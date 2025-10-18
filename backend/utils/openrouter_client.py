@@ -24,7 +24,10 @@ async def get_reasoned_decisions(
     Calls OpenRouter for structured decisions, with optional local policy context.
     """
     if not settings.OPENROUTER_API_KEY:
+        logger.error("OPENROUTER_API_KEY is empty or missing")
         raise HTTPException(status_code=500, detail={"error": "config", "message": "OPENROUTER_API_KEY missing"})
+    
+    logger.info(f"Using OpenRouter API key: {settings.OPENROUTER_API_KEY[:10]}...")
 
     user_context = {
         "zip": zip_code,
