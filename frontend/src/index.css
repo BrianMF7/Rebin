@@ -1,3 +1,6 @@
+/* Import avatar animations */
+@import "./components/avatar/avatar-animations.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

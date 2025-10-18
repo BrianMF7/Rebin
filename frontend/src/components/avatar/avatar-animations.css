@@ -1,0 +1,255 @@
+/* Avatar System Animations */
+
+@keyframes avatar-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes avatar-speak {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  25% {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+  50% {
+    transform: scale(1.08);
+    filter: brightness(1.2);
+  }
+  75% {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes avatar-listen {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.03) rotate(-2deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(0deg);
+  }
+  75% {
+    transform: scale(1.03) rotate(2deg);
+  }
+}
+
+@keyframes speech-bubble-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes speech-bubble-disappear {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+  }
+}
+
+@keyframes typing-indicator {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px currentColor);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-20px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Avatar States */
+.avatar-idle {
+  animation: avatar-breathe 3s ease-in-out infinite;
+}
+
+.avatar-speaking {
+  animation: avatar-speak 0.6s ease-in-out infinite;
+}
+
+.avatar-listening {
+  animation: avatar-listen 1s ease-in-out infinite;
+}
+
+/* Speech Bubble Animations */
+.speech-bubble-enter {
+  animation: speech-bubble-appear 0.3s ease-out forwards;
+}
+
+.speech-bubble-exit {
+  animation: speech-bubble-disappear 0.2s ease-in forwards;
+}
+
+.typing-indicator {
+  animation: typing-indicator 1.5s ease-in-out infinite;
+}
+
+/* Glow Effects */
+.avatar-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Panel Animations */
+.panel-enter {
+  animation: bounce-in 0.4s ease-out forwards;
+}
+
+.panel-slide-in {
+  animation: slide-in-right 0.3s ease-out forwards;
+}
+
+.panel-fade-in {
+  animation: fade-in-up 0.3s ease-out forwards;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .avatar-container {
+    transform: scale(0.8);
+  }
+
+  .speech-bubble {
+    max-width: calc(100vw - 4rem);
+    font-size: 0.875rem;
+    width: 280px;
+  }
+
+  .avatar-selector {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 480px) {
+  .avatar-container {
+    transform: scale(0.7);
+  }
+
+  .speech-bubble {
+    max-width: calc(100vw - 2rem);
+    font-size: 0.8rem;
+    width: 240px;
+  }
+
+  .avatar-selector {
+    transform: scale(0.8);
+  }
+
+  .avatar-selector .flex {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .avatar-container {
+    transform: scale(0.6);
+  }
+
+  .speech-bubble {
+    width: 200px;
+    font-size: 0.75rem;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .avatar-idle,
+  .avatar-speaking,
+  .avatar-listening,
+  .avatar-glow,
+  .typing-indicator {
+    animation: none;
+  }
+
+  .speech-bubble-enter,
+  .speech-bubble-exit,
+  .panel-enter,
+  .panel-slide-in,
+  .panel-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .avatar-container {
+    border: 2px solid currentColor;
+  }
+
+  .speech-bubble {
+    border: 2px solid currentColor;
+  }
+}

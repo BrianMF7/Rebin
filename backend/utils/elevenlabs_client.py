@@ -29,11 +29,11 @@ VOICE_PERSONALITIES = {
         }
     },
     "enthusiastic": {
-        "voice_id": "y3H6zY6KvCH2pEuQjmv8",  # More energetic voice
+        "voice_id": "s3TPKV1kjDlVtZbl4Ksh",  # Using same voice as friendly but with different settings
         "voice_settings": {
-            "stability": 0.4,
-            "similarity_boost": 0.8,
-            "style": 0.6,
+            "stability": 0.3,
+            "similarity_boost": 0.9,
+            "style": 0.7,
             "use_speaker_boost": True
         },
         "avatar": {

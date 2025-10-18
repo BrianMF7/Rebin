@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes } from "react-router-dom";
 // import { CameraUpload } from './components/CameraUpload'
 //import { StatsPanel } from './components/StatsPanel'
 //Testing
@@ -9,6 +9,7 @@ import { HeroSection } from "./components/landingPage/heroSection";
 import { MissionSection } from "./components/landingPage/missionSection";
 import { FeaturesSection } from "./components/landingPage/featureSection";
 import { ImpactSection } from "./components/landingPage/impactSection";
+import { InteractiveAvatarSystem } from "./components/avatar";
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
         </Routes>
       </main>
       <Footer />
+
+      {/* Interactive Avatar System */}
+      <InteractiveAvatarSystem />
     </div>
   );
 }

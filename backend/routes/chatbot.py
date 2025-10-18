@@ -228,6 +228,48 @@ async def get_available_voices():
         raise HTTPException(status_code=500, detail="Failed to retrieve voice personalities")
 
 
+@router.post("/tts", response_model=dict)
+async def simple_tts(request: dict):
+    """
+    Simple TTS endpoint for avatar system that takes text and voice personality.
+    """
+    try:
+        text = request.get("text", "")
+        voice_personality = request.get("voice_personality", "friendly")
+        
+        if not text:
+            raise HTTPException(status_code=400, detail="No text provided")
+        
+        # Sanitize text
+        text = sanitize_text(text)
+        
+        # Validate voice personality
+        valid_personalities = ["friendly", "enthusiastic", "educational"]
+        if voice_personality not in valid_personalities:
+            voice_personality = "friendly"
+            logger.warning(f"Invalid voice personality '{voice_personality}', using 'friendly'")
+        
+        # Generate TTS audio
+        audio_url = None
+        try:
+            audio_url = await get_tts_base64(text, voice_personality)
+            if audio_url is None:
+                logger.warning("TTS generation failed")
+        except Exception as exc:
+            logger.error(f"TTS generation error: {exc}")
+        
+        return {
+            "audio_url": audio_url,
+            "text": text,
+            "voice_personality": voice_personality,
+            "success": audio_url is not None
+        }
+        
+    except Exception as exc:
+        logger.error(f"Simple TTS endpoint error: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to generate speech")
+
+
 @router.get("/avatars", response_model=AvatarResponse)
 async def get_avatar_configurations():
     """
