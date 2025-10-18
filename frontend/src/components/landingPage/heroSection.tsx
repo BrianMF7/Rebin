@@ -4,12 +4,13 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { StatCard } from "../ui/statCard";
 import { Icons } from "../ui/icons";
+import { Link } from "react-router-dom";
 
 export function HeroSection() {
   const stats = [
     { value: "98%", label: "Accuracy" },
-    { value: "50K+", label: "Users" },
-    { value: "2M+", label: "Items Sorted" },
+    { value: "Expected 100+", label: "Users" },
+    { value: "Many", label: "Items Sorted" },
   ];
 
   return (
@@ -31,17 +32,19 @@ export function HeroSection() {
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty leading-relaxed">
             AI-powered waste classification that helps you make the right choice
-            every time. Join thousands making a real impact on our planet.
+            every time. Join now in making a real impact on our planet.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 group"
-            >
-              Start Sorting
-              <Icons.arrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            <Link to="/sorting">
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 group"
+              >
+                Start Sorting
+                <Icons.arrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
             <Button
               size="lg"
               variant="outline"
