@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 // import { CameraUpload } from './components/CameraUpload'
 //import { StatsPanel } from './components/StatsPanel'
+//Testing
 import { Header } from './components/landingPage/header'
 import { EarthBackground } from './components/landingPage/earthBackground'
 
