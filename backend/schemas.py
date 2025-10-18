@@ -44,3 +44,16 @@ class EventCreateRequest(BaseModel):
 
 class EventCreateResponse(BaseModel):
     id: int
+
+
+class ChatbotRequest(BaseModel):
+    decisions: List[ItemDecision]
+    voice_personality: Optional[str] = Field(default="friendly", description="Voice personality: friendly, enthusiastic, educational")
+    include_eco_tips: bool = Field(default=True, description="Whether to include eco tips in the conversation")
+
+
+class ChatbotResponse(BaseModel):
+    audio_url: Optional[str] = Field(default=None, description="Base64 data URL for audio")
+    conversational_text: str = Field(..., description="Enhanced conversational text for speech")
+    fallback_text: str = Field(..., description="Fallback text if audio fails")
+    voice_personality: str = Field(..., description="Voice personality used")
