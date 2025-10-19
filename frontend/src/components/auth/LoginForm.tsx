@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToastNotifications } from "../../contexts/ToastContext";
 import { SecuritySchemas, RateLimiter } from "../../lib/security";
@@ -45,12 +45,16 @@ export const LoginForm: React.FC = () => {
     }
   }, [searchParams, showSuccess]);
 
-  // Redirect to dashboard if already authenticated
+  // Get redirect location from state if available
+  const location = useLocation();
+  const from = location.state?.from || "/dashboard";
+  
+  // Redirect to dashboard or previous location if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   // Clear errors when form data changes
   const handleInputChange = useCallback(
@@ -105,10 +109,10 @@ export const LoginForm: React.FC = () => {
           "Welcome back!",
           "You have successfully logged in. Redirecting to dashboard..."
         );
-        // Redirect to dashboard after successful login
+        // Redirect to previous location or dashboard after successful login
         setTimeout(() => {
-          navigate("/dashboard", { replace: true });
-        }, 1500);
+          navigate(from, { replace: true });
+        }, 1000);
       } catch (error) {
         // Error is already handled by the auth context
         console.error("Login failed:", error);

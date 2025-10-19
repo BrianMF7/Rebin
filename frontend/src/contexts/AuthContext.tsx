@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
@@ -96,6 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const logoutInProgressRef = useRef(false);
 
   const isAuthenticated = !!user && !!session;
 
@@ -493,27 +495,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = useCallback(async (): Promise<void> => {
     try {
+      console.log("Starting logout process...");
+      if (logoutInProgressRef.current) {
+        console.log("Logout already in progress - ignoring duplicate call");
+        return;
+      }
+      logoutInProgressRef.current = true;
       setIsLoading(true);
       clearError();
 
-      // Clear CSRF token
-      CSRFProtection.clearToken();
-
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-
-      // Clear local state
+      // Clear local state first to prevent UI flicker
       setUser(null);
       setProfile(null);
       setSession(null);
+
+      // Clear CSRF token and any local storage items
+      CSRFProtection.clearToken();
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+
+      // Sign out from Supabase with global scope
+      console.log("Signing out from Supabase...");
+      const { error } = await supabase.auth.signOut({ 
+        scope: "global" as any 
+      });
+      
+      if (error) {
+        console.error("Supabase signout error:", error);
+        throw error;
+      }
+
+      console.log("Supabase signout successful");
+      
+      // Force clear any persisted state in browser storage
+      try {
+        // Clear any other auth-related items
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('supabase') || key.includes('auth') || key.includes('token')) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        Object.keys(sessionStorage).forEach(key => {
+          if (key.includes('supabase') || key.includes('auth') || key.includes('token')) {
+            sessionStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.warn("Error clearing storage:", e);
+      }
+      
+      console.log("Logout process complete");
     } catch (error) {
+      console.error("Logout error:", error);
       handleError(error, "Logout failed. Please try again.");
       throw error;
     } finally {
+      console.log("Setting loading to false after logout");
       setIsLoading(false);
+      logoutInProgressRef.current = false;
     }
   }, [handleError, clearError]);
 
@@ -727,19 +767,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let backupTimeout: NodeJS.Timeout;
+    let authInitialized = false;
 
     const initializeAuth = async () => {
       try {
-        // Get initial session
+        console.log("Initializing auth...");
+        
+        // Add a timeout to prevent hanging, but don't reject - just resolve with null
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((resolve) => 
+          setTimeout(() => resolve({ data: { session: null }, error: null }), 8000)
+        );
+        
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession();
+        } = await Promise.race([sessionPromise, timeoutPromise]) as any;
 
         if (error) {
           console.error("Error getting session:", error);
+          if (mounted) {
+            setIsLoading(false);
+          }
           return;
         }
+
+        console.log("Session retrieved:", session ? "valid" : "null");
 
         if (mounted) {
           setSession(session);
@@ -747,18 +801,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(session.user);
             const userProfile = await ensureUserProfile(session.user);
             setProfile(userProfile);
+          } else {
+            // Explicitly set null values when no session
+            setUser(null);
+            setProfile(null);
           }
+          authInitialized = true;
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
+        if (mounted) {
+          // Set null values on error to ensure clean state
+          setUser(null);
+          setProfile(null);
+          setSession(null);
+          authInitialized = true;
+        }
       } finally {
         if (mounted) {
+          console.log("Auth initialization complete, setting loading to false");
           setIsLoading(false);
         }
       }
     };
 
     initializeAuth();
+
+    // Backup timeout to ensure loading state is cleared even if auth initialization fails
+    backupTimeout = setTimeout(() => {
+      if (mounted && !authInitialized) {
+        console.log("Backup timeout triggered - forcing loading to false");
+        setIsLoading(false);
+      }
+    }, 12000); // 12 second backup timeout
 
     // Listen for auth changes
     const {
@@ -768,19 +843,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       console.log("Auth state changed:", event, session?.user?.id);
 
-      setSession(session);
-      if (session?.user) {
-        setUser(session.user);
-        const userProfile = await ensureUserProfile(session.user);
-        setProfile(userProfile);
-      } else {
-        setUser(null);
-        setProfile(null);
+      // Ignore misleading SIGNED_IN events that can occur right after a global sign-out
+      if (logoutInProgressRef.current && event === "SIGNED_IN") {
+        console.log("Ignoring SIGNED_IN event during logout");
+        return;
       }
+      
+      // Debounce rapid auth state changes (prevent flickering)
+      const stateChangeTimeout = setTimeout(async () => {
+        if (!mounted) return;
+        
+        if (event === "SIGNED_OUT") {
+          // Handle sign out - clear all state
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        } else if (session?.user) {
+          // Handle sign in or session update
+          setSession(session);
+          setUser(session.user);
+          
+          try {
+            const userProfile = await ensureUserProfile(session.user);
+            if (mounted) {
+              setProfile(userProfile);
+            }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+            if (mounted) {
+              setProfile(null);
+            }
+          }
+        } else {
+          // No user in session
+          setSession(session);
+          setUser(null);
+          setProfile(null);
+        }
+        
+        // Mark auth as initialized and ensure loading state is cleared
+        if (mounted) {
+          authInitialized = true;
+          console.log("Auth state change complete, setting loading to false");
+          setIsLoading(false);
+        }
+      }, 100); // Small debounce to prevent rapid changes
+      
+      return () => clearTimeout(stateChangeTimeout);
     });
 
     return () => {
       mounted = false;
+      if (backupTimeout) {
+        clearTimeout(backupTimeout);
+      }
       subscription.unsubscribe();
     };
   }, [fetchUserProfile]);
