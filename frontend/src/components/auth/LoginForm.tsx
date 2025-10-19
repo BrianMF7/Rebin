@@ -170,7 +170,7 @@ export const LoginForm: React.FC = () => {
               <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10">
                 <Icons.leaf className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              <h1 className="text-3xl font-bold mb-2" style={{ color: '#22c55e' }}>
                 Welcome Back
               </h1>
               <p className="text-muted-foreground">
@@ -279,11 +279,11 @@ export const LoginForm: React.FC = () => {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  variant="primary"
                   size="lg"
                   fullWidth
                   loading={isLoading}
                   disabled={isLoading || remainingAttempts === 0}
+                  style={{ backgroundColor: '#22c55e', color: '#fff', border: 'none' }}
                 >
                   {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
