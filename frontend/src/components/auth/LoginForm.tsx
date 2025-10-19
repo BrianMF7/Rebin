@@ -7,9 +7,7 @@ import { Form, FormField, Input } from "../ui/form";
 import { Button } from "../ui/button";
 import { Icons } from "../ui/icons";
 import { Link } from "react-router-dom";
-import { EarthBackground } from "../landingPage/earthBackground";
-import { Header } from "../landingPage/header";
-import { Footer } from "../landingPage/footer";
+import { AuthLayout } from "./AuthLayout";
 
 // ============================================================================
 // LOGIN FORM COMPONENT
@@ -159,18 +157,14 @@ export const LoginForm: React.FC = () => {
   }, [formData.email, resendConfirmation, showError, showSuccess]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <EarthBackground />
-      <Header />
-
-      <main className="flex-1 relative z-10 flex items-center justify-center py-12">
-        <div className="w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-border/20 p-8">
+    <AuthLayout>
+      <div className="w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-300 p-8">
             <div className="text-center mb-8">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-green-100">
                 <Icons.leaf className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold mb-2" style={{ color: '#22c55e' }}>
+              <h1 className="text-3xl font-bold text-primary mb-2">
                 Welcome Back
               </h1>
               <p className="text-muted-foreground">
@@ -338,9 +332,6 @@ export const LoginForm: React.FC = () => {
             </Form>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+    </AuthLayout>
   );
 };

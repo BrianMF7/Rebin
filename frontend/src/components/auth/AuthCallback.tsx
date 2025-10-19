@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useToastNotifications } from "../../contexts/ToastContext";
 import { Spinner } from "../ui/button";
 import { Icons } from "../ui/icons";
+import { AuthLayout } from "./AuthLayout";
 
 // ============================================================================
 // AUTH CALLBACK COMPONENT
@@ -69,18 +70,18 @@ export const AuthCallback: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <AuthLayout>
         <div className="text-center">
           <Spinner size="lg" />
           <p className="mt-4 text-gray-600">Verifying your account...</p>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <AuthLayout>
         <div className="text-center max-w-md mx-auto px-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <Icons.alertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -96,7 +97,7 @@ export const AuthCallback: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 

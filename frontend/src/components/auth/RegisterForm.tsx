@@ -11,9 +11,7 @@ import { Form, FormField, Input, Checkbox } from "../ui/form";
 import { Button } from "../ui/button";
 import { Icons } from "../ui/icons";
 import { Link } from "react-router-dom";
-import { EarthBackground } from "../landingPage/earthBackground";
-import { Header } from "../landingPage/header";
-import { Footer } from "../landingPage/footer";
+import { AuthLayout } from "./AuthLayout";
 
 // ============================================================================
 // REGISTRATION FORM COMPONENT
@@ -164,18 +162,14 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <EarthBackground />
-      <Header />
-
-      <main className="flex-1 relative z-10 flex items-center justify-center py-12">
-        <div className="w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-border/20 p-8">
+    <AuthLayout>
+      <div className="w-full max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-300 p-8">
             <div className="text-center mb-8">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-green-100">
                 <Icons.leaf className="w-8 h-8 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              <h1 className="text-3xl font-bold text-primary mb-2 ">
                 Create Account
               </h1>
               <p className="text-muted-foreground">
@@ -420,6 +414,7 @@ export const RegisterForm: React.FC = () => {
                   fullWidth
                   loading={isLoading}
                   disabled={isLoading || remainingAttempts === 0}
+                  style={{ backgroundColor: '#22c55e', color: '#fff', border: 'none' }}
                 >
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
@@ -474,9 +469,6 @@ export const RegisterForm: React.FC = () => {
             </Form>
           </div>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+    </AuthLayout>
   );
 };

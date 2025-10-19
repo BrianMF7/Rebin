@@ -48,6 +48,7 @@ export function Header() {
   };
 
   const isSortingPage = location.pathname === "/sorting";
+  const isAuthPage = ["/login", "/register", "/auth/callback"].includes(location.pathname);
   const isCommunityPage = [
     "/leaderboard",
     "/challenges",
@@ -58,7 +59,7 @@ export function Header() {
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b ${
-        isSortingPage
+        isSortingPage || isAuthPage
           ? "border-gray-800 bg-black"
           : "border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       }`}
@@ -72,7 +73,7 @@ export function Header() {
             </div>
             <span
               className={`text-xl font-bold ${
-                isSortingPage ? "text-white" : "text-foreground"
+                isSortingPage || isAuthPage ? "text-white" : "text-foreground"
               }`}
             >
               ReBin
@@ -85,7 +86,7 @@ export function Header() {
                 key={item.href}
                 onClick={() => handleNavClick(item.href)}
                 className={`text-sm font-medium hover:text-primary transition-colors ${
-                  isSortingPage ? "text-white" : "text-foreground"
+                  isSortingPage || isAuthPage ? "text-white" : "text-foreground"
                 }`}
               >
                 {item.label}
@@ -97,7 +98,7 @@ export function Header() {
               <div className="flex items-center gap-2">
                 <span
                   className={`text-xs font-medium ${
-                    isSortingPage ? "text-white/70" : "text-muted-foreground"
+                    isSortingPage || isAuthPage ? "text-white/70" : "text-muted-foreground"
                   }`}
                 >
                   Community:
@@ -151,7 +152,7 @@ export function Header() {
           {/* Mobile Menu Button */}
           <button
             className={`md:hidden p-2 ${
-              isSortingPage ? "text-white" : "text-foreground"
+                  isSortingPage || isAuthPage ? "text-white" : "text-foreground"
             }`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
@@ -176,7 +177,7 @@ export function Header() {
                 key={item.href}
                 onClick={() => handleNavClick(item.href)}
                 className={`block w-full text-left text-sm font-medium hover:text-primary transition-colors py-2 ${
-                  isSortingPage ? "text-white" : "text-foreground"
+                  isSortingPage || isAuthPage ? "text-white" : "text-foreground"
                 }`}
               >
                 {item.label}
@@ -193,7 +194,7 @@ export function Header() {
                 >
                   <div
                     className={`text-xs font-medium mb-2 px-2 ${
-                      isSortingPage ? "text-white/70" : "text-muted-foreground"
+                      isSortingPage || isAuthPage ? "text-white/70" : "text-muted-foreground"
                     }`}
                   >
                     Community Features
@@ -208,7 +209,7 @@ export function Header() {
                           setMobileMenuOpen(false);
                         }}
                         className={`flex items-center gap-2 w-full text-left text-sm font-medium hover:text-primary transition-colors py-2 px-2 ${
-                          isSortingPage ? "text-white" : "text-foreground"
+                          isSortingPage || isAuthPage ? "text-white" : "text-foreground"
                         }`}
                       >
                         <Icon className="w-4 h-4" />

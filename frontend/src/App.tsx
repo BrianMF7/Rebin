@@ -40,11 +40,6 @@ const AchievementSystem = lazy(() =>
     default: module.AchievementSystem,
   }))
 );
-const MobileNavigation = lazy(() =>
-  import("./components/navigation/MobileNavigation").then((module) => ({
-    default: module.default,
-  }))
-);
 const LoginForm = lazy(() =>
   import("./components/auth/LoginForm").then((module) => ({
     default: module.LoginForm,
@@ -139,9 +134,8 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ToastProvider>
-            <div className="min-h-screen flex flex-col bg-background">
+            <div className="min-h-screen flex flex-col">
               <OfflineIndicator />
-              <MobileNavigation />
 
               <Suspense fallback={<LoadingFallback />}>
                 <Routes>
@@ -149,7 +143,7 @@ function App() {
                   <Route
                     path="/"
                     element={
-                      <>
+                      <div className="min-h-screen flex flex-col bg-background">
                         <EarthBackground />
                         <Header />
                         <main className="flex-1 relative z-10">
@@ -160,7 +154,7 @@ function App() {
                         </main>
                         <Footer />
                         <InteractiveAvatarSystem />
-                      </>
+                      </div>
                     }
                   />
 

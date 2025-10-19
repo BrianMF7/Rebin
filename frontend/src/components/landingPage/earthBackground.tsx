@@ -12,6 +12,11 @@ export function EarthBackground() {
     };
 
     window.addEventListener("scroll", handleScroll);
+    
+    // Cleanup function to remove event listener
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   return (
