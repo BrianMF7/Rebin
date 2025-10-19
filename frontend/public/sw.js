@@ -83,13 +83,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Skip API requests to prevent caching issues
+  if (isAPIRequest(request)) {
+    return; // Let the browser handle API requests normally
+  }
+
+  // IMPORTANT: Skip cross-origin requests entirely (e.g., Supabase, OpenRouter)
+  // to avoid interfering with auth/network flows
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   // Handle different types of requests
   if (isStaticAsset(request)) {
     // Static assets - Cache First strategy
     event.respondWith(cacheFirst(request));
-  } else if (isAPIRequest(request)) {
-    // API requests - Network First with fallback
-    event.respondWith(networkFirst(request));
   } else if (isImageRequest(request)) {
     // Images - Cache First with fallback
     event.respondWith(cacheFirst(request));

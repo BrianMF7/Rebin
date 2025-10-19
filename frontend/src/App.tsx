@@ -14,6 +14,7 @@ import { ImpactSection } from "./components/landingPage/impactSection";
 import { InteractiveAvatarSystem } from "./components/avatar";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { Spinner } from "./components/ui/button";
+import { CommunityLayout } from "./components/layout/CommunityLayout";
 
 // ============================================================================
 // LAZY LOADED COMPONENTS
@@ -101,10 +102,28 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const [localLoading, setLocalLoading] = React.useState(true);
+  
+  // Use an effect to handle the loading state with a short timeout
+  // This prevents flickering and gives auth a moment to initialize
+  React.useEffect(() => {
+    // If auth is clearly determined, update immediately
+    if (!isLoading || user !== null) {
+      setLocalLoading(false);
+      return;
+    }
+    
+    // Otherwise, give a short grace period for auth to resolve
+    const timer = setTimeout(() => {
+      setLocalLoading(false);
+    }, 800); // Short timeout to prevent long waits
+    
+    return () => clearTimeout(timer);
+  }, [isLoading, user]);
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
+  // Only show loading briefly while auth initializes
+  if (localLoading && isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -117,7 +136,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Use state in the navigation to indicate this was a redirect
+    return <Navigate to="/login" state={{ from: window.location.pathname }} replace />;
   }
 
   // Render protected content if authenticated
@@ -181,7 +201,13 @@ function App() {
                     path="/dashboard"
                     element={
                       <ProtectedRoute>
-                        <RealTimeStats />
+                        <CommunityLayout 
+                          title="Dashboard" 
+                          description="Track your environmental impact and progress!"
+                          maxWidth="6xl"
+                        >
+                          <RealTimeStats />
+                        </CommunityLayout>
                       </ProtectedRoute>
                     }
                   />
@@ -190,7 +216,13 @@ function App() {
                     path="/stats"
                     element={
                       <ProtectedRoute>
-                        <RealTimeStats />
+                        <CommunityLayout 
+                          title="Statistics" 
+                          description="View your detailed statistics and analytics!"
+                          maxWidth="6xl"
+                        >
+                          <RealTimeStats />
+                        </CommunityLayout>
                       </ProtectedRoute>
                     }
                   />
@@ -199,19 +231,12 @@ function App() {
                     path="/leaderboard"
                     element={
                       <ProtectedRoute>
-                        <div className="min-h-screen bg-gray-50 py-8">
-                          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="text-center mb-8">
-                              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                Community Leaderboard
-                              </h1>
-                              <p className="text-gray-600">
-                                See how you rank against other eco-warriors!
-                              </p>
-                            </div>
-                            <Leaderboard />
-                          </div>
-                        </div>
+                        <CommunityLayout 
+                          title="Community Leaderboard" 
+                          description="See how you rank against other eco-warriors!"
+                        >
+                          <Leaderboard />
+                        </CommunityLayout>
                       </ProtectedRoute>
                     }
                   />
@@ -220,19 +245,12 @@ function App() {
                     path="/challenges"
                     element={
                       <ProtectedRoute>
-                        <div className="min-h-screen bg-gray-50 py-8">
-                          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="text-center mb-8">
-                              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                Community Challenges
-                              </h1>
-                              <p className="text-gray-600">
-                                Join challenges and compete with the community!
-                              </p>
-                            </div>
-                            <ChallengeSystem />
-                          </div>
-                        </div>
+                        <CommunityLayout 
+                          title="Community Challenges" 
+                          description="Join challenges and compete with the community!"
+                        >
+                          <ChallengeSystem />
+                        </CommunityLayout>
                       </ProtectedRoute>
                     }
                   />
@@ -241,19 +259,13 @@ function App() {
                     path="/achievements"
                     element={
                       <ProtectedRoute>
-                        <div className="min-h-screen bg-gray-50 py-8">
-                          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                            <div className="text-center mb-8">
-                              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                Achievements
-                              </h1>
-                              <p className="text-gray-600">
-                                Track your progress and unlock rewards!
-                              </p>
-                            </div>
-                            <AchievementSystem />
-                          </div>
-                        </div>
+                        <CommunityLayout 
+                          title="Achievements" 
+                          description="Track your progress and unlock rewards!"
+                          maxWidth="6xl"
+                        >
+                          <AchievementSystem />
+                        </CommunityLayout>
                       </ProtectedRoute>
                     }
                   />

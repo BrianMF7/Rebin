@@ -108,10 +108,10 @@ export class HybridDataService {
     this.logger = logger || this.createDefaultLogger();
     this.config = {
       enableRealTimeData: true,
-      enableMockData: true,
-      mockDataWeight: 0.6, // 60% mock data for rich experience
-      realDataWeight: 0.4, // 40% real data for authenticity
-      fallbackToMock: true,
+      enableMockData: false, // Disable mock data for real-time experience
+      mockDataWeight: 0.0, // No mock data
+      realDataWeight: 1.0, // 100% real data
+      fallbackToMock: false, // Don't fallback to mock data
       cacheTimeout: 30000, // 30 seconds
       ...config,
     };
