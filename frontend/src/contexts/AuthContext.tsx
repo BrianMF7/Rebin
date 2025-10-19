@@ -63,6 +63,7 @@ export interface AuthContextType {
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   confirmPasswordReset: (token: string, password: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
   error: string | null;
   clearError: () => void;
 }
@@ -115,10 +116,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Map Supabase auth errors to user-friendly messages
       switch (error.message) {
         case "Invalid login credentials":
-          setError("Invalid email or password. Please try again.");
+          setError(
+            "Invalid email or password. If you just registered, please check your email and click the confirmation link first."
+          );
           break;
         case "Email not confirmed":
-          setError("Please check your email and click the confirmation link.");
+          setError(
+            "Please check your email and click the confirmation link to activate your account."
+          );
           break;
         case "User already registered":
           setError("An account with this email already exists.");
@@ -129,7 +134,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           );
           break;
         default:
-          setError(error.message);
+          // Check for common email confirmation related errors
+          if (
+            error.message.includes("email") &&
+            error.message.includes("confirm")
+          ) {
+            setError(
+              "Please check your email and click the confirmation link to activate your account."
+            );
+          } else {
+            setError(error.message);
+          }
       }
     } else if (error instanceof Error) {
       setError(error.message);
@@ -149,7 +164,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUserProfile = useCallback(
     async (userId: string): Promise<UserProfile | null> => {
       try {
-        // Get user data from auth.users (built-in Supabase table)
+        // First try to get from our custom users table
+        const { data: customUser, error: customError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+        if (customUser && !customError) {
+          return {
+            id: customUser.id,
+            email: customUser.email,
+            firstName: customUser.metadata?.first_name || "",
+            lastName: customUser.metadata?.last_name || "",
+            zipCode: customUser.metadata?.zip_code,
+            bio: customUser.metadata?.bio,
+            avatar: customUser.avatar_url,
+            createdAt: customUser.created_at,
+            updatedAt: customUser.updated_at,
+          };
+        }
+
+        // Fallback to auth.users if custom table doesn't have the user
         const { data: userData, error: userError } =
           await supabase.auth.getUser();
 
@@ -188,23 +224,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!session) {
-          throw new Error("Auth session missing!");
+        // If we have a session, update user metadata
+        if (session) {
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: {
+              first_name: profileData.firstName,
+              last_name: profileData.lastName,
+              zip_code: profileData.zipCode,
+              full_name:
+                `${profileData.firstName} ${profileData.lastName}`.trim(),
+            },
+          });
+
+          if (updateError) {
+            console.warn(
+              `Failed to update user metadata: ${updateError.message}`
+            );
+            // Don't throw here - continue with profile creation
+          }
+        } else {
+          console.log("No active session found, skipping metadata update");
         }
 
-        // Update user metadata with profile information
-        const { error } = await supabase.auth.updateUser({
-          data: {
+        // Create a record in our custom users table (this works regardless of session)
+        const { error: insertError } = await supabase.from("users").insert({
+          id: user.id,
+          email: user.email || "",
+          full_name: `${profileData.firstName} ${profileData.lastName}`.trim(),
+          metadata: {
             first_name: profileData.firstName,
             last_name: profileData.lastName,
             zip_code: profileData.zipCode,
-            full_name:
-              `${profileData.firstName} ${profileData.lastName}`.trim(),
           },
+          email_verified: user.email_confirmed_at ? true : false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
 
-        if (error) {
-          throw new Error(`Failed to create profile: ${error.message}`);
+        if (insertError) {
+          console.error("Error inserting user into users table:", insertError);
+          // Don't throw here - the user is still created in auth.users
+          // We can try to create the profile record later
+        } else {
+          console.log("Successfully created user profile in users table");
         }
       } catch (error) {
         console.error("Error creating profile:", error);
@@ -212,6 +274,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     },
     []
+  );
+
+  const ensureUserProfile = useCallback(
+    async (user: User): Promise<UserProfile | null> => {
+      try {
+        // First, try to fetch existing profile
+        let profile = await fetchUserProfile(user.id);
+
+        if (!profile) {
+          // Profile doesn't exist, create it from user metadata
+          console.log("User profile not found, creating from metadata");
+
+          const profileData = {
+            firstName: user.user_metadata?.first_name || "",
+            lastName: user.user_metadata?.last_name || "",
+            zipCode: user.user_metadata?.zip_code,
+          };
+
+          try {
+            await createUserProfile(user, profileData);
+            // Try to fetch again
+            profile = await fetchUserProfile(user.id);
+          } catch (profileError) {
+            console.warn(
+              "Failed to create user profile, using metadata fallback:",
+              profileError
+            );
+            // If profile creation fails, create a basic profile from user metadata
+            profile = {
+              id: user.id,
+              email: user.email || "",
+              firstName: user.user_metadata?.first_name || "",
+              lastName: user.user_metadata?.last_name || "",
+              zipCode: user.user_metadata?.zip_code,
+              bio: user.user_metadata?.bio,
+              avatar: user.user_metadata?.avatar_url,
+              createdAt: user.created_at,
+              updatedAt: user.updated_at || user.created_at,
+            };
+          }
+        }
+
+        return profile;
+      } catch (error) {
+        console.error("Error ensuring user profile:", error);
+        // Return a basic profile from user metadata as fallback
+        return {
+          id: user.id,
+          email: user.email || "",
+          firstName: user.user_metadata?.first_name || "",
+          lastName: user.user_metadata?.last_name || "",
+          zipCode: user.user_metadata?.zip_code,
+          bio: user.user_metadata?.bio,
+          avatar: user.user_metadata?.avatar_url,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at || user.created_at,
+        };
+      }
+    },
+    [fetchUserProfile, createUserProfile]
   );
 
   // ============================================================================
@@ -261,22 +383,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(data.user);
         setSession(data.session);
 
-        // Fetch user profile
+        // Ensure user profile exists and fetch it
         if (data.user) {
-          const userProfile = await fetchUserProfile(data.user.id);
+          const userProfile = await ensureUserProfile(data.user);
           setProfile(userProfile);
-
-          // If profile data is missing, try to update it from user metadata
-          if (
-            userProfile &&
-            (!userProfile.firstName || !userProfile.lastName)
-          ) {
-            const metadata = data.user.user_metadata || {};
-            if (metadata.first_name || metadata.last_name) {
-              // Profile data exists in metadata, no need to update
-              console.log("Profile data found in user metadata");
-            }
-          }
         }
 
         // Generate and store CSRF token
@@ -326,7 +436,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           );
         }
 
-        // Register with Supabase
+        // Register with Supabase with email confirmation
         const { data: authData, error } = await supabase.auth.signUp({
           email: sanitizedData.email,
           password: sanitizedData.password,
@@ -338,6 +448,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               full_name:
                 `${sanitizedData.firstName} ${sanitizedData.lastName}`.trim(),
             },
+            // Enable email confirmation
+            emailRedirectTo: `${window.location.origin}/auth/callback?type=signup`,
           },
         });
 
@@ -346,17 +458,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         if (authData.user) {
-          // Set user and session
-          setUser(authData.user);
-          setSession(authData.session);
+          // For email confirmation flow, handle both cases
+          if (authData.session) {
+            // User is immediately confirmed (development mode or email confirmation disabled)
+            setUser(authData.user);
+            setSession(authData.session);
 
-          // Fetch user profile (data should be in user_metadata from signup)
-          const userProfile = await fetchUserProfile(authData.user.id);
-          setProfile(userProfile);
+            // Create user profile in our custom users table
+            await createUserProfile(authData.user, sanitizedData);
 
-          // Generate and store CSRF token
-          const csrfToken = CSRFProtection.generateToken();
-          CSRFProtection.storeToken(csrfToken);
+            // Fetch user profile
+            const userProfile = await fetchUserProfile(authData.user.id);
+            setProfile(userProfile);
+
+            // Generate and store CSRF token
+            const csrfToken = CSRFProtection.generateToken();
+            CSRFProtection.storeToken(csrfToken);
+          } else {
+            // User needs to verify email - create profile anyway for consistency
+            await createUserProfile(authData.user, sanitizedData);
+            console.log("User created, email confirmation required");
+            // The user will be set after email verification via the auth callback
+          }
         }
       } catch (error) {
         handleError(error, "Registration failed. Please try again.");
@@ -557,6 +680,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [handleError, clearError]
   );
 
+  const resendConfirmation = useCallback(
+    async (email: string): Promise<void> => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        // Validate email
+        const validatedData = SecuritySchemas.PasswordResetSchema.parse({
+          email,
+        });
+
+        // Sanitize email
+        const sanitizedEmail = InputSanitizer.sanitizeEmail(
+          validatedData.email
+        );
+
+        // Resend confirmation email
+        const { error } = await supabase.auth.resend({
+          type: "signup",
+          email: sanitizedEmail,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?type=signup`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+      } catch (error) {
+        handleError(
+          error,
+          "Failed to resend confirmation email. Please try again."
+        );
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [handleError, clearError]
+  );
+
   // ============================================================================
   // INITIALIZATION AND SESSION MANAGEMENT
   // ============================================================================
@@ -581,7 +745,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setSession(session);
           if (session?.user) {
             setUser(session.user);
-            const userProfile = await fetchUserProfile(session.user.id);
+            const userProfile = await ensureUserProfile(session.user);
             setProfile(userProfile);
           }
         }
@@ -607,19 +771,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       if (session?.user) {
         setUser(session.user);
-        const userProfile = await fetchUserProfile(session.user.id);
+        const userProfile = await ensureUserProfile(session.user);
         setProfile(userProfile);
-
-        // If this is a sign up event and profile data is missing, try to update it
-        if (
-          event === "SIGNED_UP" &&
-          userProfile &&
-          (!userProfile.firstName || !userProfile.lastName)
-        ) {
-          console.log(
-            "User signed up but profile data missing, will be updated on next login"
-          );
-        }
       } else {
         setUser(null);
         setProfile(null);
@@ -649,6 +802,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateProfile,
     resetPassword,
     confirmPasswordReset,
+    resendConfirmation,
     error,
     clearError,
   };

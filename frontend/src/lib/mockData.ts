@@ -484,3 +484,4 @@ export const MockDataService = {
 
 // Export individual data arrays for direct access
 export { mockUsers, mockAchievements, mockChallenges };
+

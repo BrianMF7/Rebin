@@ -15,5 +15,20 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error("Supabase environment variables are required");
 }
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Create Supabase client with proper configuration
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    // Enable email confirmation for production
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    // Configure email templates and redirect URLs
+    flowType: "pkce",
+  },
+  // Enable real-time subscriptions
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});

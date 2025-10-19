@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToastNotifications } from "../../contexts/ToastContext";
 import {
@@ -19,7 +20,8 @@ import { Footer } from "../landingPage/footer";
 // ============================================================================
 
 export const RegisterForm: React.FC = () => {
-  const { register, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+  const { register, isLoading, error, clearError, isAuthenticated } = useAuth();
   const { showError, showSuccess } = useToastNotifications();
 
   const [formData, setFormData] = useState({
@@ -95,16 +97,34 @@ export const RegisterForm: React.FC = () => {
 
       try {
         await register(formData);
-        showSuccess(
-          "Welcome to ReBin Pro!",
-          "Your account has been created successfully. Please check your email to verify your account."
-        );
+
+        // Check if user is immediately authenticated (development mode)
+        if (isAuthenticated) {
+          showSuccess(
+            "Welcome to ReBin Pro!",
+            "Your account has been created successfully. Redirecting to dashboard..."
+          );
+          // Redirect to dashboard immediately
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+          }, 1500);
+        } else {
+          // Email confirmation required
+          showSuccess(
+            "Account Created!",
+            "Please check your email and click the verification link to complete your registration."
+          );
+          // Redirect to login page with a message
+          setTimeout(() => {
+            navigate("/login?message=verify-email", { replace: true });
+          }, 2000);
+        }
       } catch (error) {
         // Error is already handled by the auth context
         console.error("Registration failed:", error);
       }
     },
-    [formData, validateForm, register, showSuccess]
+    [formData, validateForm, register, showSuccess, isAuthenticated, navigate]
   );
 
   const handleSocialRegister = useCallback(

@@ -30,3 +30,4 @@ echo ""
 echo "📖 Or use this command (replace with your actual values):"
 echo "sed -i '' 's/your_supabase_url_here/YOUR_ACTUAL_URL/g' frontend/.env"
 echo "sed -i '' 's/your_supabase_anon_key_here/YOUR_ACTUAL_KEY/g' frontend/.env"
+

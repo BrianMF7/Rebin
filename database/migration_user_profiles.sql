@@ -60,3 +60,4 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 
 -- Add comment
 COMMENT ON TABLE user_profiles IS 'User profile information linked to auth.users';
+

@@ -46,3 +46,4 @@ echo "8. Restart your development server:"
 echo "   cd frontend && npm run dev"
 echo ""
 echo "📖 For detailed instructions, see SUPABASE_SETUP.md"
+

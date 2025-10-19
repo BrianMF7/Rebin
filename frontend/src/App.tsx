@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { Header } from "./components/landingPage/header";
 import { EarthBackground } from "./components/landingPage/earthBackground";
@@ -55,6 +55,11 @@ const RegisterForm = lazy(() =>
     default: module.RegisterForm,
   }))
 );
+const AuthCallback = lazy(() =>
+  import("./components/auth/AuthCallback").then((module) => ({
+    default: module.AuthCallback,
+  }))
+);
 
 // ============================================================================
 // QUERY CLIENT SETUP
@@ -96,8 +101,26 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  // TODO: Implement authentication check
-  // For now, allow access to all routes
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Render protected content if authenticated
   return <>{children}</>;
 };
 
@@ -139,6 +162,7 @@ function App() {
                   {/* Authentication Routes */}
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/register" element={<RegisterForm />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
 
                   {/* Protected Routes */}
                   <Route

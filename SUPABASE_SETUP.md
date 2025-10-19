@@ -27,13 +27,18 @@ You're getting the error "Failed to create profile: Could not find the table 'pu
 
 ### Step 3: Create Environment File
 
-Create a `.env` file in the `frontend` directory:
+Copy the example environment file and update it with your Supabase credentials:
 
 ```bash
+# Copy the example file
+cp frontend/env.example frontend/.env
+
+# Edit the .env file with your actual Supabase credentials
 # In /Users/peguero/Rebin-1/frontend/.env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 VITE_API_BASE_URL=http://localhost:8000
+VITE_APP_ENV=development
 ```
 
 ### Step 4: Set Up Database Schema
@@ -45,9 +50,13 @@ VITE_API_BASE_URL=http://localhost:8000
 ### Step 5: Configure Authentication
 
 1. In Supabase dashboard, go to **Authentication** → **Settings**
-2. Under **Site URL**, add: `http://localhost:5179`
-3. Under **Redirect URLs**, add: `http://localhost:5179/**`
-4. Make sure **Enable email confirmations** is turned OFF for development
+2. Under **Site URL**, add: `http://localhost:5173` (or your dev server port)
+3. Under **Redirect URLs**, add: `http://localhost:5173/**`
+4. Under **Email Templates**, configure your email templates:
+   - **Confirm signup**: Use the default template or customize it
+   - **Reset password**: Use the default template or customize it
+5. For development, you can turn OFF **Enable email confirmations** to skip email verification
+6. For production, keep **Enable email confirmations** ON for security
 
 ### Step 6: Test the Setup
 
@@ -97,6 +106,23 @@ The AuthContext now:
 - Stores profile data in the `metadata` JSONB field
 - Maps the data to the expected `UserProfile` interface
 
+## 🔄 Authentication Flow
+
+The app now supports two authentication modes:
+
+### Development Mode (Email Confirmation OFF)
+
+- Users are immediately authenticated after signup
+- No email verification required
+- Automatic redirect to dashboard
+
+### Production Mode (Email Confirmation ON)
+
+- Users receive email verification link after signup
+- Must click link to verify account
+- Redirected to login page with verification message
+- After email verification, redirected to dashboard
+
 ## 🚀 Next Steps
 
 Once you have Supabase set up:
@@ -104,7 +130,9 @@ Once you have Supabase set up:
 1. Authentication will work with real Supabase auth
 2. User profiles will be stored in the database
 3. All community features will work with real data
-4. You can remove the mock data fallbacks if desired
+4. Email verification works properly
+5. Protected routes redirect unauthenticated users
+6. You can remove the mock data fallbacks if desired
 
 ## 📞 Need Help?
 

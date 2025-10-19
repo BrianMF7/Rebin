@@ -129,3 +129,4 @@ COMMENT ON TABLE leaderboard IS 'User rankings and statistics';
 COMMENT ON TABLE achievements IS 'User achievements and badges earned';
 COMMENT ON TABLE challenges IS 'Community challenges and competitions';
 COMMENT ON TABLE challenge_participants IS 'User participation in challenges';
+

@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToastNotifications } from "../../contexts/ToastContext";
 import { SecuritySchemas, RateLimiter } from "../../lib/security";
@@ -15,7 +16,16 @@ import { Footer } from "../landingPage/footer";
 // ============================================================================
 
 export const LoginForm: React.FC = () => {
-  const { login, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const {
+    login,
+    isLoading,
+    error,
+    clearError,
+    isAuthenticated,
+    resendConfirmation,
+  } = useAuth();
   const { showError, showSuccess } = useToastNotifications();
 
   const [formData, setFormData] = useState({
@@ -25,6 +35,24 @@ export const LoginForm: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
+
+  // Handle email verification message and redirect after login
+  useEffect(() => {
+    const message = searchParams.get("message");
+    if (message === "verify-email") {
+      showSuccess(
+        "Check Your Email",
+        "Please check your email and click the verification link to complete your registration."
+      );
+    }
+  }, [searchParams, showSuccess]);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // Clear errors when form data changes
   const handleInputChange = useCallback(
@@ -75,13 +103,20 @@ export const LoginForm: React.FC = () => {
 
       try {
         await login(formData);
-        showSuccess("Welcome back!", "You have successfully logged in.");
+        showSuccess(
+          "Welcome back!",
+          "You have successfully logged in. Redirecting to dashboard..."
+        );
+        // Redirect to dashboard after successful login
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 1500);
       } catch (error) {
         // Error is already handled by the auth context
         console.error("Login failed:", error);
       }
     },
-    [formData, validateForm, login, showSuccess]
+    [formData, validateForm, login, showSuccess, navigate]
   );
 
   const handleSocialLogin = useCallback(
@@ -104,6 +139,24 @@ export const LoginForm: React.FC = () => {
   }, [formData.email]);
 
   const remainingAttempts = getRemainingAttempts();
+
+  const handleResendConfirmation = useCallback(async () => {
+    if (!formData.email) {
+      showError("Email Required", "Please enter your email address first.");
+      return;
+    }
+
+    try {
+      await resendConfirmation(formData.email);
+      showSuccess(
+        "Confirmation Email Sent",
+        "Please check your email inbox and spam folder for the confirmation link."
+      );
+    } catch (error) {
+      // Error is already handled by the auth context
+      console.error("Failed to resend confirmation:", error);
+    }
+  }, [formData.email, resendConfirmation, showError, showSuccess]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -197,8 +250,17 @@ export const LoginForm: React.FC = () => {
                   <div className="bg-red-50 border border-red-200 rounded-md p-3">
                     <div className="flex">
                       <Icons.alertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                      <div className="ml-3">
+                      <div className="ml-3 flex-1">
                         <p className="text-sm text-red-800">{error}</p>
+                        {error.includes("confirmation") && (
+                          <button
+                            type="button"
+                            onClick={handleResendConfirmation}
+                            className="mt-2 text-sm text-red-600 hover:text-red-500 underline focus:outline-none"
+                          >
+                            Resend confirmation email
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
