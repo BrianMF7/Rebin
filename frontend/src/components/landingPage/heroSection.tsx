@@ -60,15 +60,6 @@ export function HeroSection() {
                     <Icons.arrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link to="/login">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-border text-foreground hover:bg-card bg-transparent"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
               </>
             )}
             <Button
