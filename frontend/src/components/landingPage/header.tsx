@@ -1,6 +1,4 @@
-import React from "react";
 import { Button } from "../ui/button";
-import { NavLink } from "../ui/nav-link";
 import { Icons } from "../ui/icons";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -10,7 +8,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { href: "#hero", label: "Home" },
@@ -49,12 +47,6 @@ export function Header() {
 
   const isSortingPage = location.pathname === "/sorting";
   const isAuthPage = ["/login", "/register", "/auth/callback"].includes(location.pathname);
-  const isCommunityPage = [
-    "/leaderboard",
-    "/challenges",
-    "/achievements",
-    "/dashboard",
-  ].includes(location.pathname);
 
   return (
     <header
@@ -125,12 +117,21 @@ export function Header() {
 
             {/* Authentication buttons */}
             {user ? (
-              <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => navigate("/sorting")}
-              >
-                Get Started
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => navigate("/sorting")}
+                >
+                  Get Started
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={logout}
+                  className="border-border text-foreground hover:bg-card"
+                >
+                  Sign Out
+                </Button>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Button
@@ -223,15 +224,27 @@ export function Header() {
 
             {/* Authentication buttons in mobile menu */}
             {user ? (
-              <Button
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => {
-                  navigate("/sorting");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Get Started
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => {
+                    navigate("/sorting");
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Get Started
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full border-border text-foreground hover:bg-card"
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Sign Out
+                </Button>
+              </div>
             ) : (
               <div className="space-y-2">
                 <Button
