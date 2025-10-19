@@ -4,17 +4,26 @@ import { NavLink } from "../ui/nav-link";
 import { Icons } from "../ui/icons";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const navItems = [
     { href: "#hero", label: "Home" },
     { href: "#mission", label: "Mission" },
     { href: "#features", label: "Features" },
     { href: "#impact", label: "Impact" },
+  ];
+
+  const communityItems = [
+    { href: "/leaderboard", label: "Leaderboard", icon: Icons.trophy },
+    { href: "/challenges", label: "Challenges", icon: Icons.target },
+    { href: "/achievements", label: "Achievements", icon: Icons.award },
+    { href: "/dashboard", label: "Dashboard", icon: Icons.barChart },
   ];
 
   const handleNavClick = (href: string) => {
@@ -39,6 +48,12 @@ export function Header() {
   };
 
   const isSortingPage = location.pathname === "/sorting";
+  const isCommunityPage = [
+    "/leaderboard",
+    "/challenges",
+    "/achievements",
+    "/dashboard",
+  ].includes(location.pathname);
 
   return (
     <header
@@ -76,12 +91,62 @@ export function Header() {
                 {item.label}
               </button>
             ))}
-            <Button
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => navigate("/sorting")}
-            >
-              Get Started
-            </Button>
+
+            {/* Community Features - only show if user is logged in */}
+            {user && (
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-xs font-medium ${
+                    isSortingPage ? "text-white/70" : "text-muted-foreground"
+                  }`}
+                >
+                  Community:
+                </span>
+                {communityItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => navigate(item.href)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium hover:bg-primary/10 transition-colors ${
+                        isSortingPage
+                          ? "text-white hover:text-white"
+                          : "text-foreground hover:text-primary"
+                      }`}
+                    >
+                      <Icon className="w-3 h-3" />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Authentication buttons */}
+            {user ? (
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => navigate("/sorting")}
+              >
+                Get Started
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/login")}
+                  className="border-border text-foreground hover:bg-card"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => navigate("/register")}
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
           </nav>
           {/* Mobile Menu Button */}
           <button
@@ -117,15 +182,78 @@ export function Header() {
                 {item.label}
               </button>
             ))}
-            <Button
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => {
-                navigate("/sorting");
-                setMobileMenuOpen(false);
-              }}
-            >
-              Get Started
-            </Button>
+
+            {/* Community Features in Mobile Menu */}
+            {user && (
+              <>
+                <div
+                  className={`border-t py-2 ${
+                    isSortingPage ? "border-gray-800" : "border-border/40"
+                  }`}
+                >
+                  <div
+                    className={`text-xs font-medium mb-2 px-2 ${
+                      isSortingPage ? "text-white/70" : "text-muted-foreground"
+                    }`}
+                  >
+                    Community Features
+                  </div>
+                  {communityItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.href}
+                        onClick={() => {
+                          navigate(item.href);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center gap-2 w-full text-left text-sm font-medium hover:text-primary transition-colors py-2 px-2 ${
+                          isSortingPage ? "text-white" : "text-foreground"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Authentication buttons in mobile menu */}
+            {user ? (
+              <Button
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => {
+                  navigate("/sorting");
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Get Started
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full border-border text-foreground hover:bg-card"
+                  onClick={() => {
+                    navigate("/login");
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => {
+                    navigate("/register");
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
           </nav>
         )}
       </div>
