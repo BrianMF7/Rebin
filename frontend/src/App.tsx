@@ -60,6 +60,11 @@ const AuthCallback = lazy(() =>
     default: module.AuthCallback,
   }))
 );
+const ResetPasswordForm = lazy(() =>
+  import("./components/auth/ResetPasswordForm").then((module) => ({
+    default: module.ResetPasswordForm,
+  }))
+);
 
 // ============================================================================
 // QUERY CLIENT SETUP
@@ -163,6 +168,10 @@ function App() {
                   <Route path="/login" element={<LoginForm />} />
                   <Route path="/register" element={<RegisterForm />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route
+                    path="/reset-password"
+                    element={<ResetPasswordForm />}
+                  />
 
                   {/* Protected Routes */}
                   <Route

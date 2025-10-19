@@ -268,19 +268,12 @@ export const LoginForm: React.FC = () => {
 
                 {/* Forgot Password Link */}
                 <div className="text-right">
-                  <button
-                    type="button"
+                  <Link
+                    to="/reset-password"
                     className="text-sm text-primary-600 hover:text-primary-500 focus:outline-none focus:underline"
-                    onClick={() => {
-                      // TODO: Navigate to forgot password page
-                      showError(
-                        "Coming Soon",
-                        "Password reset is not yet implemented."
-                      );
-                    }}
                   >
                     Forgot your password?
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Submit Button */}

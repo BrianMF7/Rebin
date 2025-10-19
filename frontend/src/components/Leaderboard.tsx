@@ -1,45 +1,87 @@
 import { useState, useEffect, useCallback } from "react";
 import { MockDataService, MockLeaderboardEntry } from "../lib/mockData";
+import { HybridDataService } from "../lib/services/HybridDataService";
+import {
+  LeaderboardAdapter,
+  NormalizedLeaderboardEntry,
+} from "../lib/adapters/DataAdapters";
 
 interface LeaderboardProps {
   timePeriod?: "1d" | "7d" | "30d" | "all";
   limit?: number;
   showCurrentUser?: boolean;
   currentUserId?: string;
+  useHybridData?: boolean; // New prop to enable hybrid data
+  showDataQuality?: boolean; // Show data quality indicators
 }
 
 export function Leaderboard({
   timePeriod = "7d",
   limit = 10,
-  showCurrentUser = true,
+  showCurrentUser: _showCurrentUser = true,
   currentUserId,
+  useHybridData = false,
+  showDataQuality = false,
 }: LeaderboardProps) {
-  // Note: showCurrentUser is available for future use
+  // State management - support both mock and hybrid data
   const [leaderboard, setLeaderboard] = useState<MockLeaderboardEntry[]>([]);
+  const [hybridLeaderboard, setHybridLeaderboard] = useState<
+    NormalizedLeaderboardEntry[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isConnected] = useState(true); // Mock as always connected
+  const [isConnected, setIsConnected] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [dataQuality, setDataQuality] = useState<string>("poor");
 
   // Use mock user ID if none provided (for demo purposes)
   const effectiveUserId = currentUserId || "demo-user-123";
 
-  // Fetch leaderboard data
+  // Initialize hybrid service
+  const hybridService = useHybridData ? new HybridDataService() : null;
+
+  // Fetch leaderboard data - supports both mock and hybrid modes
   const fetchLeaderboard = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const data = await MockDataService.getLeaderboard(limit, timePeriod);
-      setLeaderboard(data);
+      if (useHybridData && hybridService) {
+        // Use hybrid data service
+        const result = await hybridService.getHybridLeaderboard(
+          limit,
+          timePeriod,
+          effectiveUserId
+        );
+
+        // Normalize entries using adapter
+        const normalizedEntries = result.entries.map((entry) =>
+          LeaderboardAdapter.normalizeMockEntry(entry as any)
+        );
+
+        // Sort and update ranks
+        const sortedEntries = LeaderboardAdapter.sortEntries(normalizedEntries);
+        const rankedEntries = LeaderboardAdapter.updateRanks(sortedEntries);
+
+        setHybridLeaderboard(rankedEntries);
+        setDataQuality(result.stats.dataQuality);
+        setIsConnected(true);
+      } else {
+        // Use traditional mock data service
+        const data = await MockDataService.getLeaderboard(limit, timePeriod);
+        setLeaderboard(data);
+        setDataQuality("mock");
+      }
+
       setLastUpdate(new Date());
     } catch (error) {
       console.error("Failed to fetch leaderboard:", error);
       setError("Failed to load leaderboard. Please try again.");
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
     }
-  }, [limit, timePeriod]);
+  }, [limit, timePeriod, useHybridData, hybridService, effectiveUserId]);
 
   // Mock real-time updates (simulate periodic refresh)
   useEffect(() => {
@@ -82,6 +124,36 @@ export function Leaderboard({
     }
   };
 
+  const getDataQualityColor = (quality: string) => {
+    switch (quality) {
+      case "excellent":
+        return "text-green-600 bg-green-100";
+      case "good":
+        return "text-blue-600 bg-blue-100";
+      case "fair":
+        return "text-yellow-600 bg-yellow-100";
+      case "poor":
+        return "text-red-600 bg-red-100";
+      case "mock":
+        return "text-purple-600 bg-purple-100";
+      default:
+        return "text-gray-600 bg-gray-100";
+    }
+  };
+
+  const getDataSourceIcon = (dataSource: string) => {
+    switch (dataSource) {
+      case "real":
+        return "👤";
+      case "mock":
+        return "🎭";
+      case "hybrid":
+        return "🔄";
+      default:
+        return "❓";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -118,7 +190,9 @@ export function Leaderboard({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Leaderboard</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {useHybridData ? "Hybrid Leaderboard" : "Leaderboard"}
+          </h2>
           <p className="text-sm text-gray-600">
             Top performers in the last{" "}
             {timePeriod === "all" ? "all time" : timePeriod}
@@ -141,17 +215,74 @@ export function Leaderboard({
         </div>
       </div>
 
+      {/* Data Quality Indicator */}
+      {showDataQuality && (
+        <div className="flex items-center space-x-2 mb-4">
+          <span className="text-sm text-gray-600">Data Quality:</span>
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full ${getDataQualityColor(
+              dataQuality
+            )}`}
+          >
+            {dataQuality.toUpperCase()}
+          </span>
+          {useHybridData && (
+            <span className="text-xs text-gray-500">(Hybrid mode enabled)</span>
+          )}
+        </div>
+      )}
+
       {/* Leaderboard List */}
       <div className="space-y-3">
-        {leaderboard.map((entry) => {
+        {(useHybridData ? hybridLeaderboard : leaderboard).map((entry) => {
           const isCurrentUser =
-            effectiveUserId && entry.user_id === effectiveUserId;
+            effectiveUserId &&
+            (useHybridData
+              ? (entry as NormalizedLeaderboardEntry).id === effectiveUserId
+              : (entry as MockLeaderboardEntry).user_id === effectiveUserId);
+
+          // Handle both data types
+          const entryData = useHybridData
+            ? (entry as NormalizedLeaderboardEntry)
+            : (entry as MockLeaderboardEntry);
+
+          const rank = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).rank
+            : (entryData as MockLeaderboardEntry).rank_position;
+
+          const name = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).name
+            : (entryData as MockLeaderboardEntry).user_name;
+
+          const avatar = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).avatar
+            : (entryData as MockLeaderboardEntry).avatar_url;
+
+          const itemsSorted = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).totalItemsSorted
+            : (entryData as MockLeaderboardEntry).total_items_sorted;
+
+          const points = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).totalPoints
+            : (entryData as MockLeaderboardEntry).total_points;
+
+          const co2Saved = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).totalCo2Saved
+            : (entryData as MockLeaderboardEntry).total_co2_saved;
+
+          const dataSource = useHybridData
+            ? (entryData as NormalizedLeaderboardEntry).dataSource
+            : "mock";
 
           return (
             <div
-              key={entry.user_id}
+              key={
+                useHybridData
+                  ? (entryData as NormalizedLeaderboardEntry).id
+                  : (entryData as MockLeaderboardEntry).user_id
+              }
               className={`flex items-center p-4 rounded-lg border-2 transition-all duration-200 ${getRankColor(
-                entry.rank_position
+                rank
               )} ${
                 isCurrentUser ? "ring-2 ring-green-500 ring-opacity-50" : ""
               }`}
@@ -159,22 +290,22 @@ export function Leaderboard({
               {/* Rank */}
               <div className="flex-shrink-0 w-12 text-center">
                 <span className="text-lg font-bold text-gray-700">
-                  {getRankIcon(entry.rank_position)}
+                  {getRankIcon(rank)}
                 </span>
               </div>
 
               {/* Avatar */}
               <div className="flex-shrink-0 ml-4">
-                {entry.avatar_url ? (
+                {avatar ? (
                   <img
-                    src={entry.avatar_url}
-                    alt={entry.user_name}
+                    src={avatar}
+                    alt={name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
-                      {entry.user_name.charAt(0).toUpperCase()}
+                      {name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
@@ -183,27 +314,33 @@ export function Leaderboard({
               {/* User Info */}
               <div className="flex-grow ml-4">
                 <div className="flex items-center">
-                  <h3 className="font-semibold text-gray-900">
-                    {entry.user_name}
-                  </h3>
+                  <h3 className="font-semibold text-gray-900">{name}</h3>
                   {isCurrentUser && (
                     <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                       You
                     </span>
                   )}
+                  {useHybridData && (
+                    <span
+                      className="ml-2 text-xs"
+                      title={`Data source: ${dataSource}`}
+                    >
+                      {getDataSourceIcon(dataSource)}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600">
-                  {entry.total_items_sorted} items sorted
+                  {itemsSorted} items sorted
                 </p>
               </div>
 
               {/* Stats */}
               <div className="flex-shrink-0 text-right">
                 <div className="text-lg font-bold text-green-600">
-                  {entry.total_points.toLocaleString()} pts
+                  {points.toLocaleString()} pts
                 </div>
                 <div className="text-sm text-gray-600">
-                  {entry.total_co2_saved.toFixed(2)} kg CO₂
+                  {co2Saved.toFixed(2)} kg CO₂
                 </div>
               </div>
             </div>
@@ -212,7 +349,9 @@ export function Leaderboard({
       </div>
 
       {/* Empty State */}
-      {leaderboard.length === 0 && (
+      {(useHybridData
+        ? hybridLeaderboard.length === 0
+        : leaderboard.length === 0) && (
         <div className="text-center py-8">
           <div className="text-gray-400 text-4xl mb-4">🏆</div>
           <p className="text-gray-600">
